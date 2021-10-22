@@ -2,7 +2,7 @@ const fs = require("fs");
 const companyController = {};
 
 companyController.getAllCompanies = (req, res, next) => {
-  const { city, page } = req.query;
+  const { city, page, sortBy, order } = req.query;
 
   const limit = 20;
   const reqPage = parseInt(page) || 1;
@@ -12,21 +12,15 @@ companyController.getAllCompanies = (req, res, next) => {
     let data = JSON.parse(rawData);
     let companyList = data.companies;
     let jobsList = data.jobs;
+    let ratingsList = data.ratings;
     let result = companyList;
-    // if (title) {
-    //   result = result.filter((i) => i.title === title);
-    // }
 
-    console.log("city :>> ", city);
     if (city) {
-      console.log("cityarray :>> ", city.split(","));
       const filteredJobsList = [];
 
       city.split(",").forEach((eachCity) => {
         const temp = jobsList.filter((i) => i.city === eachCity);
-        console.log("1filteredJobsList :>> ", filteredJobsList.length);
         filteredJobsList.push(...temp);
-        console.log("2filteredJobsList :>> ", filteredJobsList.length);
       });
       // Get list of all job located on Miami
       // const filteredJobsList = jobsList.filter((i) => i.city === city);
@@ -51,14 +45,31 @@ companyController.getAllCompanies = (req, res, next) => {
 
       console.log("result.length :>> ", result.length);
       console.log("removedDupID.length :>> ", removedDupID.length);
-      // result = result.filter((i) => i.city === city);
     }
 
-    // if (companyName) {
-    //   let queryCompany = companyList.find((i) => i.name === companyName);
+    if (sortBy === "ratings") {
+      const ratedCompanyList = companyList.map((x) => {
+        console.log("111x.rating :>> ", x);
+        x.ratings.map((x) => {
+          oneRating = ratingsList.find((item) => item.id === x);
 
-    //   result = result.filter((i) => i.companyId === queryCompany.id);
-    // }
+          const averageRating =
+            (oneRating.workLifeBalanceRatings +
+              oneRating.payAndBenefits +
+              oneRating.jobsSecurityAndAdvancement +
+              oneRating.management +
+              oneRating.culture) /
+            5;
+          // console.log("oneRating :>> ", averageRating);
+          return averageRating;
+        });
+        // console.log("x.rating :>> ", x.rating);
+      });
+
+      let queryCompany = companyList.find((i) => i.name === companyName);
+
+      result = result.filter((i) => i.companyId === queryCompany.id);
+    }
 
     // if (singleSkill) {
     //   result = result.filter((i) => i.skills.includes(singleSkill));
